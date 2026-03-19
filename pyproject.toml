@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dataset_generator"
+version = "0.1.6"
+description = "Generate strictly defined datasets"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Piotr Sołtysik", email = "pit56482@gmail.com" }]
+requires-python = ">=3.12.2"
+dependencies = [
+    "numpy>=2.0.0",
+    "pandas>=3.0.1",
+    "pydantic>=2.12.5",
+    "scipy>=1.15",
+    "typing_extensions>=4.15.0",
+]
+[project.scripts]
+dataset_gen = "dataset_generator.__main__:main"
