@@ -1,224 +1,30 @@
-from .DatasetDef import DatasetDef
-from .Generator import Generator
-from .Exporter import export_to_arff
-from .Loaders import load_from_file, load_from_text
+from .dataset_generator import DatasetGenerator
+import argparse
+import sys
 
-# TODO loader-json, DatasetDef object
-# TODO exporter - to Arff
+
+def build_arg_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Dataset generator.")
+    p.add_argument(
+        "--datasets",
+        "-d",
+        type=str,
+        help="Specify the txt file containing the datasets to generate.",
+    )
+    p.add_argument(
+        "--out", type=str, help="Specify output directory other than default."
+    )
+    return p
 
 
 def main():
-
-    # datasets = load_from_file("example.json")
-    test = """[
-  {
-    "name":"test",
-  "samples": 1000,
-  "seeds":[10,2],
-  "features": [
-    {
-      "name": "age",
-      "type": "int",
-      "data_dist": {
-        "distributions": [
-          {
-            "type": "continuous",
-            "dist_mean": 35.0,
-            "dist_std": 10.0,
-            "min_val": 18.0,
-            "max_val": 65.0
-          },
-          {
-            "type": "continuous",
-            "dist_mean": 45.0,
-            "dist_std": 8.0,
-            "min_val": 18.0,
-            "max_val": 65.0
-          }
-        ],
-        "drift_defs": [
-          { "center": 500, "window": 100 }
-        ]
-      }
-    },
-    {
-        "name":"height",
-        "type":"float",
-        "data_dist": {
-            "distributions": [{
-                "type":"continuous",
-                "dist_mean":160,
-                "dist_std":10,
-                "min_val":120,
-                "max_val":200
-            }],
-            "drift_defs": []
-        }
-    },
-    {
-      "name": "income",
-      "type": "float",
-      "data_dist": {
-        "distributions": [
-          {
-            "type": "continuous",
-            "dist_mean": 40000.0,
-            "dist_std": 15000.0,
-            "min_val": 0.0,
-            "max_val": 200000.0
-          },
-          {
-            "type": "continuous",
-            "dist_mean": 55000.0,
-            "dist_std": 20000.0,
-            "min_val": 0.0,
-            "max_val": 200000.0
-          }
-        ],
-        "drift_defs": [
-          { "center": 500, "window": 100 }
-        ]
-      }
-    },
-    {
-      "name": "employment_status",
-      "type": "str",
-      "data_dist": {
-        "distributions": [
-          {
-            "type": "categorical",
-            "literals": ["employed", "unemployed", "self-employed", "retired"],
-            "probabilities": [0.6, 0.15, 0.15, 0.1]
-          },
-          {
-            "type": "categorical",
-            "literals": ["employed", "unemployed", "self-employed", "retired"],
-            "probabilities": [0.4, 0.35, 0.15, 0.1]
-          }
-        ],
-        "drift_defs": [
-          { "center": 500, "window": 80 }
-        ]
-      }
-    }
-  ],
-  "class_func": 
-    {
-      "functions": [
-        "lambda row: int((row['age'] > 30) and (row['income'] > 50000) and (row['employment_status'] == 'employed'))","lambda row:  int((row['age'] > 30) and (row['income'] > 35000) and (row['employment_status'] != 'unemployed'))"
-      ],
-      "drift_defs": [
-        { "center": 500, "window": 50 }
-      ]
-    }
-}, 
-  {"name":"another",
-  "samples": 1000,
-  "seeds":[10,2],
-  "features": [
-    {
-      "name": "age",
-      "type": "int",
-      "data_dist": {
-        "distributions": [
-          {
-            "type": "continuous",
-            "dist_mean": 35.0,
-            "dist_std": 10.0,
-            "min_val": 18.0,
-            "max_val": 65.0
-          },
-          {
-            "type": "continuous",
-            "dist_mean": 45.0,
-            "dist_std": 8.0,
-            "min_val": 18.0,
-            "max_val": 65.0
-          }
-        ],
-        "drift_defs": [
-          { "center": 500, "window": 100 }
-        ]
-      }
-    },
-    {
-        "name":"height",
-        "type":"float",
-        "data_dist": {
-            "distributions": [{
-                "type":"continuous",
-                "dist_mean":160,
-                "dist_std":10,
-                "min_val":120,
-                "max_val":200
-            }],
-            "drift_defs": []
-        }
-    },
-    {
-      "name": "income",
-      "type": "float",
-      "data_dist": {
-        "distributions": [
-          {
-            "type": "continuous",
-            "dist_mean": 40000.0,
-            "dist_std": 15000.0,
-            "min_val": 0.0,
-            "max_val": 200000.0
-          },
-          {
-            "type": "continuous",
-            "dist_mean": 55000.0,
-            "dist_std": 20000.0,
-            "min_val": 0.0,
-            "max_val": 200000.0
-          }
-        ],
-        "drift_defs": [
-          { "center": 500, "window": 100 }
-        ]
-      }
-    },
-    {
-      "name": "employment_status",
-      "type": "str",
-      "data_dist": {
-        "distributions": [
-          {
-            "type": "categorical",
-            "literals": ["employed", "unemployed", "self-employed", "retired"],
-            "probabilities": [0.6, 0.15, 0.15, 0.1]
-          },
-          {
-            "type": "categorical",
-            "literals": ["employed", "unemployed", "self-employed", "retired"],
-            "probabilities": [0.4, 0.35, 0.15, 0.1]
-          }
-        ],
-        "drift_defs": [
-          { "center": 500, "window": 80 }
-        ]
-      }
-    }
-  ],
-  "class_func": 
-    {
-      "functions": [
-        "lambda row: int((row['age'] > 30) and (row['income'] > 50000) and (row['employment_status'] == 'employed'))","lambda row:  int((row['age'] > 30) and (row['income'] > 35000) and (row['employment_status'] != 'unemployed'))"
-      ],
-      "drift_defs": [
-        { "center": 500, "window": 50 }
-      ]
-    }
-}]"""
-    datasets = load_from_text(test)
-    overall = {}
-    for dataset in datasets:
-        generated = Generator.generate(dataset)
-        overall = overall | generated
-
-    export_to_arff(overall)
+    parser = build_arg_parser()
+    args = parser.parse_args()
+    if not args.datasets and not args.out:
+        parser.print_help(sys.stderr)
+        sys.exit(0)
+    else:
+        DatasetGenerator.generate(args.datasets, args.out)
 
 
 if __name__ == "__main__":
