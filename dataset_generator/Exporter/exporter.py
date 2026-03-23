@@ -2,8 +2,8 @@ from pathlib import Path
 from ..DatasetDef import DatasetDef
 
 
-def generate_arff_strings(datasets: dict[str, any]) -> list[str]:
-    res = []
+def generate_arff_strings(datasets: dict[str, any]) -> dict[str, str]:
+    res = {}
     for name, dataset in datasets.items():
         arff_str = ""
         arff_str += f"@RELATION {name}\n\n"
@@ -46,14 +46,14 @@ def generate_arff_strings(datasets: dict[str, any]) -> list[str]:
         arff_str += "\n@DATA\n"
         for _, row in df.iterrows():
             arff_str += ",".join(str(v) for v in row) + "\n"
-        res.append(arff_str)
+        res[name] = arff_str
     return res
 
 
 def export_to_arff(datasets: dict[str, any], out_path: str = "results") -> None:
     arff_strs = generate_arff_strings(datasets)
-    for i, name in enumerate(datasets):
+    for name in datasets:
         Path(out_path).mkdir(exist_ok=True, parents=True)
         filepath = Path(f"{out_path}/{name}.arff")
         with open(filepath, "w") as f:
-            f.write(arff_strs[i])
+            f.write(arff_strs[name])
