@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dataset_generator"
-version = "1.0.5"
+version = "1.0.7"
 description = "Generate strictly defined datasets"
 readme = "README.md"
 license = { text = "MIT" }

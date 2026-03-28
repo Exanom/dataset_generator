@@ -2,7 +2,7 @@ from pathlib import Path
 from ..DatasetDef import DatasetDef
 
 
-def generate_arff_strings(datasets: dict[str, any]) -> dict[str, str]:
+def generate_arff_strings(datasets: dict[str, DatasetDef]) -> dict[str, str]:
     res = {}
     for name, dataset in datasets.items():
         arff_str = ""
@@ -27,7 +27,7 @@ def generate_arff_strings(datasets: dict[str, any]) -> dict[str, str]:
                         tmp += f"-> <{drift.center} ; {drift.window}> -> "
                     dist_info += tmp
                 arff_str += f"%{dist_info} \n"
-                arff_str += f"@ATTRIBUTE {feature.name} {values}\n"
+                arff_str += f"@ATTRIBUTE {feature.name} {values}\n\n"
             else:
                 dist_info = ""
                 for i in range(len(feature.data_dist.distributions)):
@@ -38,8 +38,13 @@ def generate_arff_strings(datasets: dict[str, any]) -> dict[str, str]:
                         tmp += f"-> <{drift.center} ; {drift.window}> -> "
                     dist_info += tmp
                 arff_str += f"%{dist_info} \n"
-                arff_str += f"@ATTRIBUTE {feature.name} {'integer' if feature.type=='int' else 'real'}\n"
+                arff_str += f"@ATTRIBUTE {feature.name} {'integer' if feature.type=='int' else 'real'}\n\n"
 
+        for i, dist in enumerate(meta.class_func.functions):
+            arff_str += f"%{dist}\n"
+            if len(meta.class_func.drift_defs) > i:
+                drift = meta.class_func.drift_defs[i]
+                arff_str += f"%<{drift.center} ; {drift.window}> \n"
         arff_str += f"@ATTRIBUTE class integer\n"
 
         df = dataset["df"]
