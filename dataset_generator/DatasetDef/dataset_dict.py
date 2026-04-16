@@ -47,6 +47,7 @@ class FeatureDistRandom(BaseModel):
             raise ValueError(
                 f"Minimum value of the distribution must be lower than the maximum value. Currently {self.min_val} is bigger than or equal {self.max_val}."
             )
+        return self
 
 
 class FeatureDistConstant(BaseModel):
@@ -136,6 +137,9 @@ class Feature(BaseModel):
         for dist in self.data_dist.distributions:
             if self.type == "str":
                 if dist.type != "categorical" and dist.type != "constant":
+                    raise ValueError(f"Type mismatch for feature {self.name}.")
+            else:
+                if dist.type == "categorical":
                     raise ValueError(f"Type mismatch for feature {self.name}.")
         return self
 

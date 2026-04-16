@@ -42,7 +42,7 @@ class Generator:
 
     @staticmethod
     def generate_random(min_val: float, max_val: float, n: int) -> np.array:
-        arr = np, random.uniform(min_val, max_val, size=(n))
+        arr = np.random.uniform(min_val, max_val, size=(n))
         return arr
 
     @staticmethod
@@ -54,7 +54,6 @@ class Generator:
             column_names = []
             columns_vals = []
             for feature in dataset.features:
-                print(feature)
                 feature_data = Generator.generate_feature_vector(
                     feature.data_dist, feature.type, dataset.samples
                 )

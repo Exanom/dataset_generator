@@ -12,16 +12,23 @@ def generate_arff_strings(datasets: dict[str, DatasetDef]) -> dict[str, str]:
         arff_str += (
             "% for numeric: (mean ; std ; min-max) -> <drift_center ; drift_width>\n"
         )
-        arff_str += "% for categorical: [prob1, prob2, prob3, ...] -> <drift_center ; drift_width>\n\n"
+        arff_str += "% for categorical: [prob1, prob2, prob3, ...] -> <drift_center ; drift_width>\n"
+        arff_str += "%normal: (mean ; std ; min-max)\n"
+        arff_str += "%random: (min-max)\n"
+        arff_str += "%constant(val)\n\n"
 
         for feature in meta.features:
             if feature.type == "str":
                 dist_info = ""
                 values = set()
                 for i, dist in enumerate(feature.data_dist.distributions):
-                    vals = dist.literals
-                    values.update(vals)
-                    tmp = f"{dist.probabilities} "
+                    if dist.type == "categorical":
+                        vals = dist.literals
+                        values.update(vals)
+                        tmp = f"{dist.probabilities} "
+                    elif dist.type == "constant":
+                        values.add(dist.value)
+                        tmp = f"({dist.value})"
                     if len(feature.data_dist.drift_defs) > i:
                         drift = feature.data_dist.drift_defs[i]
                         tmp += f"-> <{drift.center} ; {drift.window}> -> "
@@ -32,7 +39,13 @@ def generate_arff_strings(datasets: dict[str, DatasetDef]) -> dict[str, str]:
                 dist_info = ""
                 for i in range(len(feature.data_dist.distributions)):
                     dist = feature.data_dist.distributions[i]
-                    tmp = f"({dist.dist_mean} ; {dist.dist_std} ; {dist.min_val} - {dist.max_val}) "
+                    if dist.type == "normal":
+                        tmp = f"({dist.dist_mean} ; {dist.dist_std} ; {dist.min_val} - {dist.max_val}) "
+                    elif dist.type == "constant":
+                        tmp = f"({dist.value})"
+                    elif dist.type == "random":
+                        tmp = f"({dist.min_val}-{dist.max_val})"
+
                     if len(feature.data_dist.drift_defs) > i:
                         drift = feature.data_dist.drift_defs[i]
                         tmp += f"-> <{drift.center} ; {drift.window}> -> "
