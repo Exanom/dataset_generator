@@ -20,7 +20,7 @@ class Generator:
         np.random.seed(seed)
 
     @staticmethod
-    def generate_truncated(
+    def generate_truncated_norm(
         mean: float, std_dev: float, low: float, high: float, n: int
     ) -> np.array:
         a = (low - mean) / std_dev  # lower z-score
@@ -31,9 +31,19 @@ class Generator:
         return ret
 
     @staticmethod
-    def genetate_categorical(labels: list[str], probs: list[float], n: int) -> np.array:
+    def generate_categorical(labels: list[str], probs: list[float], n: int) -> np.array:
         arr = random.choices(labels, probs, k=n)
         return np.array(arr)
+
+    @staticmethod
+    def generate_constant(value: float | str, n: int) -> np.array:
+        arr = np.full(n, fill_value=value)
+        return arr
+
+    @staticmethod
+    def generate_random(min_val: float, max_val: float, n: int) -> np.array:
+        arr = np, random.uniform(min_val, max_val, size=(n))
+        return arr
 
     @staticmethod
     def generate(dataset: DatasetDef) -> dict[str, any]:
@@ -44,6 +54,7 @@ class Generator:
             column_names = []
             columns_vals = []
             for feature in dataset.features:
+                print(feature)
                 feature_data = Generator.generate_feature_vector(
                     feature.data_dist, feature.type, dataset.samples
                 )
@@ -100,22 +111,28 @@ class Generator:
         data_sources = []
         for i, dist in enumerate(feature_data.distributions):
             num_of_samples = drift_end_points[i] - drift_start_ponts[i]
-            if dist.type == "continuous":
-                source = Generator.generate_truncated(
+            if dist.type == "normal":
+                source = Generator.generate_truncated_norm(
                     dist.dist_mean,
                     dist.dist_std,
                     dist.min_val,
                     dist.max_val,
                     num_of_samples,
                 )
-                if feature_type == "int":
-                    source = np.round(source)
-                data_sources.append(source)
-            else:
-                source = Generator.genetate_categorical(
+            elif dist.type == "categorical":
+                source = Generator.generate_categorical(
                     dist.literals, dist.probabilities, num_of_samples
                 )
-                data_sources.append(source)
+            elif dist.type == "constant":
+                source = Generator.generate_constant(dist.value, num_of_samples)
+            elif dist.type == "random":
+                source = Generator.generate_random(
+                    dist.min_val, dist.max_val, num_of_samples
+                )
+
+            if feature_type == "int":
+                source = np.round(source)
+            data_sources.append(source)
 
         drift_state = False
         result = np.array([])

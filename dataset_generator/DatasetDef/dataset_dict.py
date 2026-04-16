@@ -20,8 +20,8 @@ class DriftDef(BaseModel):
 
 
 # Feature defs
-class FeatureDist(BaseModel):
-    type: Literal["continuous"]
+class FeatureDistNormal(BaseModel):
+    type: Literal["normal"]
     dist_mean: float
     dist_std: float = Field(gt=0)
     min_val: float
@@ -34,6 +34,24 @@ class FeatureDist(BaseModel):
                 f"Minimum value and maximum value for a feature must  be lesser than and greater than the distribution mean respectively. Found inconsistency for mean {self.dist_mean} and range ({self.min_val} ; {self.max_val})."
             )
         return self
+
+
+class FeatureDistRandom(BaseModel):
+    type: Literal["random"]
+    min_val: float
+    max_val: float
+
+    @model_validator(mode="after")
+    def range_check(self) -> Self:
+        if self.min_val >= self.max_val:
+            raise ValueError(
+                f"Minimum value of the distribution must be lower than the maximum value. Currently {self.min_val} is bigger than or equal {self.max_val}."
+            )
+
+
+class FeatureDistConstant(BaseModel):
+    type: Literal["constant"]
+    value: float | str
 
 
 class FeatureDistLiteral(BaseModel):
@@ -65,7 +83,10 @@ class FeatureDistLiteral(BaseModel):
         return self
 
 
-DistType = Annotated[FeatureDist | FeatureDistLiteral, Field(discriminator="type")]
+DistType = Annotated[
+    FeatureDistNormal | FeatureDistRandom | FeatureDistConstant | FeatureDistLiteral,
+    Field(discriminator="type"),
+]
 
 
 class FeatureDrift(BaseModel):
@@ -114,10 +135,7 @@ class Feature(BaseModel):
     def feature_type_check(self) -> Self:
         for dist in self.data_dist.distributions:
             if self.type == "str":
-                if dist.type != "categorical":
-                    raise ValueError(f"Type mismatch for feature {self.name}.")
-            else:
-                if dist.type != "continuous":
+                if dist.type != "categorical" and dist.type != "constant":
                     raise ValueError(f"Type mismatch for feature {self.name}.")
         return self
 

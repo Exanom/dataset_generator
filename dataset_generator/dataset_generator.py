@@ -10,11 +10,13 @@ class DatasetGenerator:
         source: str, outpath: str = None, ret_arff: bool = False
     ) -> dict[str, any] | list[str] | None:
         try:
-            if Path(source).is_file():
-                dataset_defs = load_from_file(source)
-            else:
-                dataset_defs = load_from_text(source)
+            file_check = Path(source).is_file()
         except:
+            file_check = False
+
+        if Path(source).is_file():
+            dataset_defs = load_from_file(source)
+        else:
             dataset_defs = load_from_text(source)
 
         datasets = {}

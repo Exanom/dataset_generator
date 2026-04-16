@@ -1,7 +1,7 @@
 from .dataset_dict import (
     DatasetDef,
     FeatureDrift,
-    FeatureDist,
+    FeatureDistNormal,
     FeatureDistLiteral,
     ClassFunc,
 )
