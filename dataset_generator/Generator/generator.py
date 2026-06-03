@@ -50,6 +50,7 @@ class Generator:
         res = {}
         for i in range(dataset.repetitions):
             name = f"{dataset.name}_s{dataset.seeds[i]}"
+            print(f"GENERATING {name}")
             Generator.set_global_seed(dataset.seeds[i])
             column_names = []
             columns_vals = []
@@ -164,13 +165,11 @@ class Generator:
                 result = np.concat([result, tmp])
 
             else:
-                prev_start = 0 if i < 2 else drift_points[i - 1]
+                prev_start = 0 if i < 2 else drift_points[i] - drift_points[i - 1]
                 result = np.concat(
                     [
                         result,
-                        data_sources[source_index][
-                            start - prev_start : size + prev_start
-                        ],
+                        data_sources[source_index][prev_start : prev_start + size],
                     ]
                 )
 
