@@ -182,6 +182,7 @@ class Generator:
         class_functions: ClassFunc, df: DataFrame, samples: int
     ) -> np.array:
         drift_points = [0]
+
         for drift in class_functions.drift_defs:
             start = drift.center - math.ceil(drift.window / 2)
             end = drift.center + math.ceil(drift.window / 2)

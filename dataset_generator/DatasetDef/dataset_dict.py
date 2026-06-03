@@ -92,7 +92,7 @@ DistType = Annotated[
 
 class FeatureDrift(BaseModel):
     distributions: list[DistType] = Field(min_length=1)
-    drift_defs: list[DriftDef]
+    drift_defs: list[DriftDef] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def drift_number_check(self) -> Self:
@@ -149,7 +149,7 @@ class Feature(BaseModel):
 
 class ClassFunc(BaseModel):
     functions: list[str] = Field(min_length=1)  # will be securely passed to simpleeval
-    drift_defs: list[DriftDef]
+    drift_defs: list[DriftDef] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def drift_number_check(self) -> Self:
