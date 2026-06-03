@@ -124,7 +124,7 @@ class Generator:
                 )
             elif dist.type == "constant":
                 source = Generator.generate_constant(dist.value, num_of_samples)
-            elif dist.type == "random":
+            elif dist.type == "uniform":
                 source = Generator.generate_random(
                     dist.min_val, dist.max_val, num_of_samples
                 )
@@ -215,10 +215,6 @@ class Generator:
                     raise Exception(
                         f"Invalid classification function(either function {function_index-1} or {function_index}). Error message: {e}"
                     )
-                if not np.all(np.isin(tmp, [0, 1])):
-                    raise Exception(
-                        f"Invalid classification function(function {function_index}). All function must return class of 0 or 1."
-                    )
                 Y = np.concat([Y, tmp])
             else:
                 try:
@@ -228,10 +224,6 @@ class Generator:
                 except Exception as e:
                     raise Exception(
                         f"Invalid classification function(function {function_index}). Error message: {e}"
-                    )
-                if not np.all(np.isin(tmp, [0, 1])):
-                    raise Exception(
-                        f"Invalid classification function(function {function_index}). All function must return class of 0 or 1."
                     )
                 Y = np.concat([Y, tmp])
 

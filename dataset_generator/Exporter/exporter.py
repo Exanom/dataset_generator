@@ -43,7 +43,7 @@ def generate_arff_strings(datasets: dict[str, DatasetDef]) -> dict[str, str]:
                         tmp = f"({dist.dist_mean} ; {dist.dist_std} ; {dist.min_val} - {dist.max_val}) "
                     elif dist.type == "constant":
                         tmp = f"({dist.value})"
-                    elif dist.type == "random":
+                    elif dist.type == "uniform":
                         tmp = f"({dist.min_val}-{dist.max_val})"
 
                     if len(feature.data_dist.drift_defs) > i:

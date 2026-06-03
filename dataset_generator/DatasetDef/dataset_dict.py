@@ -37,7 +37,7 @@ class FeatureDistNormal(BaseModel):
 
 
 class FeatureDistRandom(BaseModel):
-    type: Literal["random"]
+    type: Literal["uniform"]
     min_val: float
     max_val: float
 
