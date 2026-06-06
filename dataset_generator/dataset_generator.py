@@ -1,4 +1,4 @@
-from .Loaders import load_from_file, load_from_text
+from .Loaders import load_from_file, load_from_text, load_from_dir
 from .Generator import Generator
 from .Exporter import export_to_arff, generate_arff_strings
 from pathlib import Path
@@ -9,13 +9,11 @@ class DatasetGenerator:
     def generate(
         source: str, outpath: str = None, ret_arff: bool = False
     ) -> dict[str, any] | list[str] | None:
-        try:
-            file_check = Path(source).is_file()
-        except:
-            file_check = False
 
         if Path(source).is_file():
             dataset_defs = load_from_file(source)
+        elif Path(source).is_dir():
+            dataset_defs = load_from_dir(source)
         else:
             dataset_defs = load_from_text(source)
 
