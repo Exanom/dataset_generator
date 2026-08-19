@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2.12.5",
     "scipy>=1.15",
     "typing_extensions>=4.15.0",
+    "asteval==1.0.9",
 ]
 [project.scripts]
 dataset_gen = "dataset_generator.__main__:main"
