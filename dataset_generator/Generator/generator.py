@@ -4,6 +4,12 @@ from scipy.stats import truncnorm
 import random
 import numpy as np
 import math
+import ast
+from asteval import Interpreter
+
+
+class UnsafeExpressionError(Exception):
+    """Raised when a user expression contains disallowed syntax."""
 
 
 class Generator:
@@ -178,6 +184,77 @@ class Generator:
         return result
 
     @staticmethod
+    def validateFunction(function: str) -> None:
+
+        FORBIDDEN_NODES = (
+            ast.Import,
+            ast.ImportFrom,
+            ast.Lambda,
+            ast.FunctionDef,
+            ast.ClassDef,
+            ast.With,
+            ast.Global,
+            ast.Nonlocal,
+            ast.Delete,
+            ast.Assign,
+            ast.AugAssign,
+            ast.Attribute,
+        )
+        try:
+            tree = ast.parse(function, mode="eval")
+        except SyntaxError as e:
+            raise UnsafeExpressionError(f"Invalid syntax: {e}")
+
+        for node in ast.walk(tree):
+            if isinstance(node, FORBIDDEN_NODES):
+                raise UnsafeExpressionError(
+                    f"Disallowed construct in expression: {type(node).__name__}"
+                )
+            if isinstance(node, ast.Name) and node.id.startswith("_"):
+                raise UnsafeExpressionError(f"Disallowed identifier: {node.id}")
+
+    @staticmethod
+    def safeEval(function: str) -> np.array:
+        SAFE_SYMBOLS = {
+            # math module functions
+            "sqrt": math.sqrt,
+            "sin": math.sin,
+            "cos": math.cos,
+            "tan": math.tan,
+            "exp": math.exp,
+            "log": math.log,
+            "log2": math.log2,
+            "log10": math.log10,
+            "pi": math.pi,
+            "e": math.e,
+            "floor": math.floor,
+            "ceil": math.ceil,
+            "abs": abs,
+            "min": min,
+            "max": max,
+            "round": round,
+            # a few numpy elementwise ops, useful if a "row" carries array-like fields
+            "np_clip": np.clip,
+            "np_sign": np.sign,
+        }
+        Generator.validateFunction(function)
+
+        def f(row):
+            interpreter = Interpreter(
+                usersyms={**SAFE_SYMBOLS, **row.to_dict()},
+                use_numpy=False,
+                minimal=True,
+            )
+            result = interpreter(function)
+            if interpreter.error:
+                raise UnsafeExpressionError(
+                    f"Error evaluating {function}: {interpreter.error}"
+                )
+            return result
+
+        return f
+
+    @staticmethod
     def generate_labels_vector(
         class_functions: ClassFunc, df: DataFrame, samples: int
     ) -> np.array:
@@ -202,8 +279,10 @@ class Generator:
                     class_functions.drift_defs[function_index - 1].center,
                     class_functions.drift_defs[function_index - 1].window,
                 )
-                f_prev = eval(class_functions.functions[function_index - 1])
-                f_next = eval(class_functions.functions[function_index])
+                f_prev = Generator.safeEval(
+                    class_functions.functions[function_index - 1]
+                )
+                f_next = Generator.safeEval(class_functions.functions[function_index])
                 try:
                     tmp = np.array(
                         [
@@ -219,7 +298,8 @@ class Generator:
             else:
                 try:
                     tmp = df[start:end].apply(
-                        eval(class_functions.functions[function_index]), axis=1
+                        Generator.safeEval(class_functions.functions[function_index]),
+                        axis=1,
                     )
                 except Exception as e:
                     raise Exception(
